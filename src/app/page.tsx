@@ -24,22 +24,24 @@ export default function Home() {
   const generateSalesLetter = async () => {
     setLoading(true);
     try {
+      const body = JSON.stringify({
+        productName,
+        problem,
+        fear,
+        solution,
+        features,
+        originalPrice,
+        specialPrice,
+        bonus,
+        scarcity,
+      })
+      console.log(body);
       const response = await fetch('/api/generate-sales-letter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          productName,
-          problem,
-          fear,
-          solution,
-          features,
-          originalPrice,
-          specialPrice,
-          bonus,
-          scarcity,
-        }),
+        body,
       });
 
       const data = await response.json();
