@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
+export async function POST(req: NextApiRequest) {
   const { productName, problem, fear, solution, features, originalPrice, specialPrice, bonus, scarcity } = req.body;
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -38,9 +38,15 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
       max_tokens: 700,
     });
 
-    res.status(200).json({ salesLetter: response.choices[0]?.message?.content?.trim() || "エラーが発生しました。もう一度お試しください。" });
+    return new Response(
+      JSON.stringify({ salesLetter: response.choices[0]?.message?.content?.trim() || "エラーが発生しました。もう一度お試しください。" }),
+      { status: 200 }
+    )
   } catch (error) {
     console.error("Error generating sales letter:", error);
-    res.status(500).json({ message: "エラーが発生しました。もう一度お試しください。" });
+    return new Response(
+      JSON.stringify({ message: "エラーが発生しました。もう一度お試しください。" }),
+      { status: 500 }
+    )
   }
 }
