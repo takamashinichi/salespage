@@ -52,13 +52,16 @@ export default function Home() {
     `;
 
     try {
-      const response = await openai.completions.create({
+      const response = await openai.chat.completions.create({
         model: "gpt-4",
-        prompt: prompt,
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: prompt }
+        ],
         max_tokens: 700,
       });
 
-      setSalesLetter(response.choices[0].text.trim());
+      setSalesLetter(response.choices[0]?.message?.content?.trim() || "エラーが発生しました。もう一度お試しください。");
     } catch (error) {
       console.error("Error generating sales letter:", error);
       setSalesLetter("エラーが発生しました。もう一度お試しください。");
@@ -74,6 +77,15 @@ export default function Home() {
         <CardContent>
           <div className="space-y-4">
             <Input type="text" placeholder="OpenAI APIキーを入力" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+            <Input type="text" placeholder="製品名を入力" value={productName} onChange={(e) => setProductName(e.target.value)} />
+            <Input type="text" placeholder="ユーザーの悩みを入力" value={problem} onChange={(e) => setProblem(e.target.value)} />
+            <Input type="text" placeholder="恐怖の要素を入力" value={fear} onChange={(e) => setFear(e.target.value)} />
+            <Input type="text" placeholder="解決策を入力" value={solution} onChange={(e) => setSolution(e.target.value)} />
+            <Input type="text" placeholder="主な特徴を入力" value={features} onChange={(e) => setFeatures(e.target.value)} />
+            <Input type="text" placeholder="通常価格を入力" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} />
+            <Input type="text" placeholder="特別価格を入力" value={specialPrice} onChange={(e) => setSpecialPrice(e.target.value)} />
+            <Input type="text" placeholder="特典を入力" value={bonus} onChange={(e) => setBonus(e.target.value)} />
+            <Input type="text" placeholder="希少性を入力" value={scarcity} onChange={(e) => setScarcity(e.target.value)} />
             <Button type="button" onClick={generateSalesLetter} disabled={loading}>{loading ? "生成中..." : "セールスページを生成"}</Button>
           </div>
         </CardContent>
