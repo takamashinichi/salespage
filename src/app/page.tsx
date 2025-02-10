@@ -1,101 +1,89 @@
-import Image from "next/image";
+import { useState } from "react";
+import { Button } from "../components/ui/button";
+import { Input, } from "../components/ui/input";
+import { Card, CardContent } from "../components/ui/card";
+import OpenAI from "openai";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [apiKey, setApiKey] = useState("");
+  const [productName, setProductName] = useState("スマート掃除ロボット");
+  const [problem, setProblem] = useState("毎日の掃除が面倒で時間がかかる");
+  const [fear, setFear] = useState("部屋が汚れ放題になり、健康にも悪影響");
+  const [solution, setSolution] = useState("最新のスマート掃除ロボット");
+  const [features, setFeatures] = useState("AI搭載で自動清掃、スマホ操作可能、省エネ設計");
+  const [originalPrice, setOriginalPrice] = useState("89,800");
+  const [specialPrice, setSpecialPrice] = useState("49,800");
+  const [bonus, setBonus] = useState("1年間の無料メンテナンス");
+  const [scarcity, setScarcity] = useState("限定100台、今すぐご注文を！");
+  const [salesLetter, setSalesLetter] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const generateSalesLetter = async () => {
+    if (!apiKey) {
+      setSalesLetter("APIキーを入力してください。");
+      return;
+    }
+
+    setLoading(true);
+    const openai = new OpenAI({ apiKey });
+
+    const prompt = `
+      製品名: ${productName}
+      ユーザーの悩み: ${problem}
+      恐怖の要素: ${fear}
+      解決策: ${solution}
+      主な特徴: ${features}
+      通常価格: ${originalPrice}円
+      特別価格: ${specialPrice}円
+      特典: ${bonus}
+      希少性: ${scarcity}
+      
+      セールスレターを以下の流れに沿って作成してください：
+      1. キャッチーなヘッドコピー（読者の注意を引く）
+      2. 問題提起（ユーザーの悩みと恐怖を強調）
+      3. 解決策の提示（製品の紹介）
+      4. 製品の特徴とベネフィットの説明（分かりやすく整理）
+      5. 価格の提示（価値を伝えた後に記載）
+      6. 保証・特典の紹介（信頼性向上のため）
+      7. 強力なCTA（行動を促す文言）
+      8. 追伸（希少性や限定性を強調して申し込みを後押し）
+    `;
+
+    try {
+      const response = await openai.completions.create({
+        model: "gpt-4",
+        prompt: prompt,
+        max_tokens: 700,
+      });
+
+      setSalesLetter(response.choices[0].text.trim());
+    } catch (error) {
+      console.error("Error generating sales letter:", error);
+      setSalesLetter("エラーが発生しました。もう一度お試しください。");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="container mx-auto p-8 font-sans">
+      <h1 className="text-3xl font-bold mb-4">セールスページAIエージェント</h1>
+      <Card className="p-6">
+        <CardContent>
+          <div className="space-y-4">
+            <Input type="text" placeholder="OpenAI APIキーを入力" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+            <Button type="button" onClick={generateSalesLetter} disabled={loading}>{loading ? "生成中..." : "セールスページを生成"}</Button>
+          </div>
+        </CardContent>
+      </Card>
+      {salesLetter && (
+        <Card className="mt-6 p-6 bg-gray-100 border">
+          <CardContent>
+            <h2 className="text-2xl font-semibold mb-2">生成されたセールスレター</h2>
+            <pre className="whitespace-pre-wrap">{salesLetter}</pre>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
