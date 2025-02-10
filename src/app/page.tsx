@@ -21,7 +21,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const generateSalesLetter = async () => {
-    setApiKey(process.env.OPENAI_API_KEY || "");
     if (!apiKey) {
       setSalesLetter("APIキーを入力してください。");
       return;
