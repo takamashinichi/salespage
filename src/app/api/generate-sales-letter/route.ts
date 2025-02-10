@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest } from 'next';
 import OpenAI from 'openai';
 
 export async function POST(req: NextApiRequest) {

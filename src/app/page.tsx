@@ -6,28 +6,19 @@ import { Input, } from "../components/ui/input";
 import { Card, CardContent } from "../components/ui/card";
 
 export default function Home() {
-  const [productName, setProductName] = useState("");
-  const [problem, setProblem] = useState("");
-  const [fear, setFear] = useState("");
-  const [solution, setSolution] = useState("");
-  const [features, setFeatures] = useState("");
-  const [originalPrice, setOriginalPrice] = useState("");
-  const [specialPrice, setSpecialPrice] = useState("");
-  const [bonus, setBonus] = useState("");
-  const [scarcity, setScarcity] = useState("");
+  const [productName, setProductName] = useState("スマート掃除ロボット");
+  const [problem, setProblem] = useState("毎日の掃除が面倒で時間がかかる");
+  const [fear, setFear] = useState("部屋が汚れ放題になり、健康にも悪影響");
+  const [solution, setSolution] = useState("最新のスマート掃除ロボット");
+  const [features, setFeatures] = useState("AI搭載で自動清掃、スマホ操作可能、省エネ設計");
+  const [originalPrice, setOriginalPrice] = useState("89,800");
+  const [specialPrice, setSpecialPrice] = useState("49,800");
+  const [bonus, setBonus] = useState("1年間の無料メンテナンス");
+  const [scarcity, setScarcity] = useState("限定100台、今すぐご注文を！");
   const [salesLetter, setSalesLetter] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setProductName("スマート掃除ロボット");
-    setProblem("毎日の掃除が面倒で時間がかかる");
-    setFear("部屋が汚れ放題になり、健康にも悪影響");
-    setSolution("最新のスマート掃除ロボット");
-    setFeatures("AI搭載で自動清掃、スマホ操作可能、省エネ設計");
-    setOriginalPrice("89,800");
-    setSpecialPrice("49,800");
-    setBonus("1年間の無料メンテナンス");
-    setScarcity("限定100台、今すぐご注文を！");
   })
 
   const generateSalesLetter = async () => {
