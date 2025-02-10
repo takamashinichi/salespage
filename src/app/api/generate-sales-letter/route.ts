@@ -1,8 +1,7 @@
-import { NextApiRequest } from 'next';
 import OpenAI from 'openai';
 
-export async function POST(req: NextApiRequest) {
-  const { productName, problem, fear, solution, features, originalPrice, specialPrice, bonus, scarcity } = req.body;
+export async function POST(req: Request) {
+  const { productName, problem, fear, solution, features, originalPrice, specialPrice, bonus, scarcity } = await req.json();
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
