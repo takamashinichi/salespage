@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
-import { Input, } from "../components/ui/input";
+import { Input } from "../components/ui/input";
 import { Card, CardContent } from "../components/ui/card";
 
 export default function Home() {
@@ -19,7 +19,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-  })
+  }, []);
 
   const generateSalesLetter = async () => {
     setLoading(true);
@@ -34,8 +34,8 @@ export default function Home() {
         specialPrice,
         bonus,
         scarcity,
-      })
-      console.log(body);
+      });
+
       const response = await fetch('/api/generate-sales-letter', {
         method: 'POST',
         headers: {
@@ -61,19 +61,58 @@ export default function Home() {
         <Card className="p-6">
           <CardContent>
             <div className="space-y-4">
-              <Input type="text" placeholder="製品名を入力" value={productName} onChange={(e) => setProductName(e.target.value)} />
-              <Input type="text" placeholder="ユーザーの悩みを入力" value={problem} onChange={(e) => setProblem(e.target.value)} />
-              <Input type="text" placeholder="恐怖の要素を入力" value={fear} onChange={(e) => setFear(e.target.value)} />
-              <Input type="text" placeholder="解決策を入力" value={solution} onChange={(e) => setSolution(e.target.value)} />
-              <Input type="text" placeholder="主な特徴を入力" value={features} onChange={(e) => setFeatures(e.target.value)} />
-              <Input type="text" placeholder="通常価格を入力" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} />
-              <Input type="text" placeholder="特別価格を入力" value={specialPrice} onChange={(e) => setSpecialPrice(e.target.value)} />
-              <Input type="text" placeholder="特典を入力" value={bonus} onChange={(e) => setBonus(e.target.value)} />
-              <Input type="text" placeholder="希少性を入力" value={scarcity} onChange={(e) => setScarcity(e.target.value)} />
-              <Button type="button" onClick={generateSalesLetter} disabled={loading}>{loading ? "生成中..." : "セールスページを生成"}</Button>
+              <label className="block">
+                <span className="text-gray-700">製品名</span>
+                <Input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">ユーザーの悩み</span>
+                <Input type="text" value={problem} onChange={(e) => setProblem(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">恐怖の要素</span>
+                <Input type="text" value={fear} onChange={(e) => setFear(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">解決策</span>
+                <Input type="text" value={solution} onChange={(e) => setSolution(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">主な特徴</span>
+                <Input type="text" value={features} onChange={(e) => setFeatures(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">通常価格</span>
+                <Input type="text" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">特別価格</span>
+                <Input type="text" value={specialPrice} onChange={(e) => setSpecialPrice(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">特典</span>
+                <Input type="text" value={bonus} onChange={(e) => setBonus(e.target.value)} />
+              </label>
+
+              <label className="block">
+                <span className="text-gray-700">希少性</span>
+                <Input type="text" value={scarcity} onChange={(e) => setScarcity(e.target.value)} />
+              </label>
+
+              <Button type="button" onClick={generateSalesLetter} disabled={loading}>
+                {loading ? "生成中..." : "セールスページを生成"}
+              </Button>
             </div>
           </CardContent>
         </Card>
+
         {salesLetter && (
           <Card className="mt-6 p-6 bg-gray-100 border">
             <CardContent>
