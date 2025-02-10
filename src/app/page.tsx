@@ -33,7 +33,7 @@ export default function Home() {
   const generateSalesLetter = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/generateSalesLetter', {
+      const response = await fetch('/api/generate-sales-letter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
