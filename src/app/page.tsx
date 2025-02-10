@@ -7,7 +7,7 @@ import { Card, CardContent } from "../components/ui/card";
 import OpenAI from "openai";
 
 export default function Home() {
-  const [apiKey, setApiKey] = useState(process.env.OPENAI_API_KEY);
+  const [apiKey, setApiKey] = useState("");
   const [productName, setProductName] = useState("スマート掃除ロボット");
   const [problem, setProblem] = useState("毎日の掃除が面倒で時間がかかる");
   const [fear, setFear] = useState("部屋が汚れ放題になり、健康にも悪影響");
@@ -21,13 +21,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const generateSalesLetter = async () => {
+    setApiKey(process.env.OPENAI_API_KEY || "");
     if (!apiKey) {
       setSalesLetter("APIキーを入力してください。");
       return;
     }
 
     setLoading(true);
-    const openai = new OpenAI({ apiKey });
+    const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
 
     const prompt = `
       製品名: ${productName}
