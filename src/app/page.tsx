@@ -155,21 +155,21 @@ export default function Home() {
                 <h2 className="text-xl font-semibold mb-4">FASフレームワーク</h2>
                 <div className="space-y-4">
                   <label className="block">
-                    <span className="text-gray-700">Fear（恐怖・不安）</span>
+                    <span className="text-gray-700">不安要素</span>
                     <Textarea 
                       value={fear} 
                       onChange={(e) => handleInputChange(e, setFear)} 
                     />
                   </label>
                   <label className="block">
-                    <span className="text-gray-700">Agitate（悩みの深掘り）</span>
+                    <span className="text-gray-700">問題の深掘り</span>
                     <Textarea 
                       value={agitate} 
                       onChange={(e) => handleInputChange(e, setAgitate)} 
                     />
                   </label>
                   <label className="block">
-                    <span className="text-gray-700">Solution（解決策）</span>
+                    <span className="text-gray-700">解決策</span>
                     <Textarea 
                       value={solution} 
                       onChange={(e) => handleInputChange(e, setSolution)} 
