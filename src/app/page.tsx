@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
+import Link from "next/link";
 
 export default function Home() {
   // 基本情報
@@ -41,6 +42,7 @@ export default function Home() {
 
   const [salesLetter, setSalesLetter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string>("");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -91,10 +93,66 @@ export default function Home() {
     setLoading(false);
   };
 
+  const saveSalesPage = async () => {
+    if (!salesLetter) {
+      setSaveStatus("先にセールスページを生成してください");
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/save-sales-page', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productName,
+          targetPersona,
+          targetAge,
+          targetGender,
+          targetOccupation,
+          fear,
+          agitate,
+          solution,
+          features,
+          benefits,
+          mediaExposure,
+          testimonials,
+          originalPrice,
+          specialPrice,
+          bonus,
+          bonusDeadline,
+          scarcity,
+          urgency,
+          salesLetter,
+        }),
+      });
+
+      const data = await response.json();
+      setSaveStatus(data.message);
+
+      // 3秒後にステータスメッセージをクリア
+      setTimeout(() => {
+        setSaveStatus("");
+      }, 3000);
+
+    } catch (error) {
+      console.error("Error saving sales page:", error);
+      setSaveStatus("保存中にエラーが発生しました");
+    }
+  };
+
   return (
     <>
       <div className="container mx-auto p-8 font-sans">
-        <h1 className="text-3xl font-bold mb-4">セールスページAIエージェント</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold">セールスページAIエージェント</h1>
+          <Link href="/saved">
+            <Button variant="outline">
+              保存したセールスページ一覧
+            </Button>
+          </Link>
+        </div>
         <Card className="p-6">
           <CardContent>
             <div className="space-y-4">
@@ -283,14 +341,33 @@ export default function Home() {
                 </div>
               </div>
 
-              <Button 
-                type="button" 
-                onClick={generateSalesLetter} 
-                disabled={loading}
-                className="w-full"
-              >
-                {loading ? "生成中..." : "セールスページを生成"}
-              </Button>
+              <div className="space-y-4">
+                <Button 
+                  type="button" 
+                  onClick={generateSalesLetter} 
+                  disabled={loading}
+                  className="w-full mb-2"
+                >
+                  {loading ? "生成中..." : "セールスページを生成"}
+                </Button>
+
+                {salesLetter && (
+                  <Button
+                    type="button"
+                    onClick={saveSalesPage}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    セールスページを保存
+                  </Button>
+                )}
+
+                {saveStatus && (
+                  <div className="text-center mt-2 text-sm text-gray-600">
+                    {saveStatus}
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

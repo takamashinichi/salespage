@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { type Error as CustomError } from 'openai';
 // Prismaの一時的な無効化
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
@@ -20,7 +21,6 @@ export async function POST(req: Request) {
       features,
       benefits,
       mediaExposure,
-      testimonials,
       originalPrice,
       specialPrice,
       bonus,
@@ -343,12 +343,12 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error generating sales letter:", error);
 
     return new Response(JSON.stringify({
       message: "エラーが発生しました。もう一度お試しください。",
-      error: (error as any).message
+      error: error instanceof Error ? error.message : '不明なエラーが発生しました'
     }), {
       status: 500,
       headers: { "Content-Type": "application/json" }

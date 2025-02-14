@@ -1,0 +1,25 @@
+-- CreateTable
+CREATE TABLE "SalesPage" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "productName" TEXT NOT NULL,
+    "targetPersona" TEXT NOT NULL,
+    "targetAge" TEXT NOT NULL,
+    "targetGender" TEXT NOT NULL,
+    "targetOccupation" TEXT NOT NULL,
+    "fear" TEXT NOT NULL,
+    "agitate" TEXT NOT NULL,
+    "solution" TEXT NOT NULL,
+    "features" TEXT NOT NULL,
+    "benefits" TEXT NOT NULL,
+    "mediaExposure" TEXT NOT NULL,
+    "testimonials" TEXT NOT NULL,
+    "originalPrice" TEXT NOT NULL,
+    "specialPrice" TEXT NOT NULL,
+    "bonus" TEXT NOT NULL,
+    "bonusDeadline" TEXT NOT NULL,
+    "scarcity" TEXT NOT NULL,
+    "urgency" TEXT NOT NULL,
+    "salesLetter" TEXT NOT NULL
+);
