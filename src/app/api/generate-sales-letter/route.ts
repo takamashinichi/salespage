@@ -1,9 +1,10 @@
 import OpenAI from 'openai';
+import { NextRequest, NextResponse } from 'next/server';
 // Prismaの一時的な無効化
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const requestBody = await req.json();
     console.log("Request received:", requestBody);
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
       bonus,
       bonusDeadline,
       scarcity,
-      urgency
+      urgency,
     } = requestBody;
 
     if (!process.env.OPENAI_API_KEY) {
@@ -335,22 +336,16 @@ export async function POST(req: Request) {
     }
 
     // データベース保存を一時的に無効化
-    return new Response(JSON.stringify({ 
+    return NextResponse.json({ 
       salesLetter
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
     });
 
   } catch (error: unknown) {
     console.error("Error generating sales letter:", error);
 
-    return new Response(JSON.stringify({
+    return NextResponse.json({
       message: "エラーが発生しました。もう一度お試しください。",
       error: error instanceof Error ? error.message : '不明なエラーが発生しました'
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    }, { status: 500 });
   }
 }
