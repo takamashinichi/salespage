@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { type Error as CustomError } from 'openai';
 // Prismaの一時的な無効化
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
