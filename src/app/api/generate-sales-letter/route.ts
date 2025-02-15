@@ -1,343 +1,160 @@
 import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from '@anthropic-ai/sdk';
 // Prismaの一時的な無効化
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
 export async function POST(req: NextRequest) {
   try {
-    const requestBody = await req.json();
-    console.log("Request received:", requestBody);
-
-    const {
-      productName,
-      targetPersona,
-      targetAge,
-      targetGender,
-      targetOccupation,
-      fear,
-      agitate,
-      solution,
-      features,
-      benefits,
-      mediaExposure,
-      originalPrice,
-      specialPrice,
-      bonus,
-      bonusDeadline,
-      scarcity,
-      urgency,
-    } = requestBody;
-
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("Missing OpenAI API key in environment variables.");
-    }
-
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    const prompt = `
-      以下の情報を元に、ストーリー性のある長めのセールスレターを作成してください。
-      文章は短めに区切り、適度な改行を入れて読みやすくしてください。
-      一行は30文字程度を目安にしてください。
-      見出しや項目名は使用せず、自然な文章の流れで書いてください。
-
-      文章の読みやすさに関する重要な指示：
-      ・一つの段落は3行までを目安にしてください
-      ・文章の区切りごとに1行空けてください
-      ・話題が変わる際は2行以上空けてください
-      ・重要なポイントは独立した行にしてください
-      ・数字やデータは前後に空白行を入れて強調してください
-      ・長い文章は適切に区切って、リズム感を持たせてください
-      ・句点「。」の後は必ず改行してください
-      ・読点「、」の後でも、文が長くなる場合は適宜改行してください
-
-      文体に関する重要な指示：
-      ・「皆様」「みなさま」などの表現は使わず、「あなた」に直接語りかけてください
-      ・読者一人一人に話しかけるような、親近感のある文体を使ってください
-      ・「あなたも同じように感じていませんか？」など、共感を誘う表現を使ってください
-      ・「私」という表現は必要最小限に抑え、自然な文の流れを重視してください
-      ・主語を省略できる場合は省略し、より自然な日本語の文章にしてください
-      ・提案や説明は、断定的な表現を避け、やわらかい口調を心がけてください
-      ・お客様の声は、具体的なエピソードを中心に紹介してください
-
-      【製品基本情報】
-      製品名: ${productName}
-
-      【ターゲット設定】
-      想定する顧客: ${targetPersona}
-      年齢: ${targetAge}
-      性別: ${targetGender}
-      職業: ${targetOccupation}
-
-      【FASフレームワーク】
-      Fear（恐怖・不安）: ${fear}
-      Agitate（悩みの深掘り）: ${agitate}
-      Solution（解決策）: ${solution}
-
-      【製品詳細】
-      主な特徴: ${features}
-      具体的なメリット: ${benefits}
-
-      【社会的証明】
-      メディア掲載: ${mediaExposure}
-
-      ■ お客様の声1：
-      東京都・佐藤美咲さん（38歳・共働き主婦）
-
-      「私の場合、フルタイムで働きながら、
-      小学生の子供2人の育児に追われる毎日でした。
-      休日は掃除に追われ、
-      子供との時間が取れないことにストレスを感じていました。
-
-      このロボットを導入してからは、
-      帰宅時には既に掃除が完了していて、
-      床はいつもピカピカ。
-      掃除時間が週あたり5時間も削減でき、
-      その分子供との時間に充てられるようになりました。
-
-      今では休日に家族で公園に出かけることが
-      定例になっています。」
-
-
-      ■ お客様の声2：
-      大阪府・山田健一さん（45歳・IT企業経営）
-
-      「在宅ワークが増え、
-      仕事部屋の清潔さが気になっていました。
-      花粉症もあり、
-      埃っぽい環境では仕事に集中できませんでした。
-
-      スマート掃除ロボットは、
-      私が仕事している間に静かに掃除をしてくれます。
-      埃やアレルゲンが減り、症状が70%も改善。
-      オンライン会議中も静音モードで動作するので、
-      仕事の邪魔になりません。
-
-      導入後、作業効率が1.5倍に向上したと
-      実感しています。」
-
-
-      ■ お客様の声3：
-      福岡県・井上由美さん（52歳・専業主婦）
-
-      「年齢とともに腰痛が悪化し、
-      掃除機をかけるのが辛くなっていました。
-      特に和室の畳や階段の掃除は
-      大きな負担でした。
-
-      このロボットは畳の目に沿って
-      優しく掃除してくれ、
-      階段も安全に清掃。
-      腰への負担が激減し、
-      痛み止めの服用回数が月に4回から1回に減りました。
-
-      主人も『家がいつも清潔で気持ちいい』と
-      喜んでいます。」
-
-
-      ■ お客様の声4：
-      千葉県・中村家（共働き・犬2匹飼育）
-
-      「ペットの抜け毛の掃除が
-      毎日の課題でした。
-      特に換毛期は1日2回の掃除が必要で、
-      休日返上の日々。
-
-      ロボットを導入後は、
-      留守中も定期的に掃除してくれるので、
-      帰宅時の抜け毛の量が90%減少。
-      犬たちもロボットに慣れて、
-      むしろ遊び相手として楽しんでいます。
-
-      家族全員のストレスが
-      大幅に減りました。」
-
-
-      ■ お客様の声5：
-      神奈川県・鈴木一家（4人家族・マンション在住）
-
-      「小学生の子供2人が
-      毎日外遊びから帰ってくると、
-      砂や泥で廊下や居間が汚れていました。
-      掃除の頻度を増やしたくても、
-      仕事で時間が取れず悩んでいました。
-
-      ロボットは子供たちが帰宅する前に
-      自動で掃除を開始。
-      床の汚れが気になることがなくなり、
-      叱る機会も減って
-      家族の雰囲気が明るくなりました。
-
-      電気代も以前の掃除機使用時と比べて
-      月々2000円ほど節約できています。」
-
-      ■ お客様の声6：
-      愛知県・田中雄一さん（41歳・飲食店経営）
-
-      【導入前の課題】
-      ・店舗の清掃に毎日2時間以上を費やしていた
-      ・開店前の準備時間が足りない
-      ・アルバイトスタッフの負担が大きかった
-
-      【導入後の効果】
-      ・清掃時間が85%削減（120分→18分）
-      ・開店準備の余裕が生まれた
-      ・人件費が月額4.5万円削減
-      ・床の清潔さが向上し、お客様からの評価が上昇
-
-      【具体的な活用方法】
-      ・深夜の営業終了後に自動運転
-      ・朝の開店前に仕上げ清掃
-      ・ランチタイム後の短時間清掃
-
-
-      ■ お客様の声7：
-      北海道・高橋家（祖父母と同居・6人家族）
-
-      【家族構成と課題】
-      ・3世代6人家族（祖父母・両親・子供2人）
-      ・広い一戸建て（40坪）の掃除が大変
-      ・冬場は雪の影響で掃除が更に困難
-      ・祖父母の健康への配慮が必要
-
-      【導入効果】
-      ・家事の負担が家族全員で70%軽減
-      ・空気の質が改善（花粉・ハウスダスト対策）
-      ・光熱費が年間で54,000円削減
-      ・祖父母の転倒リスクが減少
-
-      【家族の感想】
-      ・祖母「掃除の心配がなくなって安心」
-      ・母「実家の様子を見に行く時間が増えた」
-      ・子供たち「部屋が常に清潔で気持ちいい」
-
-      【価格と特典】
-      通常価格: ${originalPrice}円
-      特別価格: ${specialPrice}円
-      特典: ${bonus}
-      特典期限: ${bonusDeadline}
-
-      【希少性・緊急性】
-      数量限定: ${scarcity}
-      期間限定: ${urgency}
-
-      ストーリー展開のポイント：
-      - 共感を呼ぶ問題提起から自然に始める
-      - 典型的な一日の困りごとを時系列で詳しく描写
-      - 掃除の悩みが生活の様々な面に与える影響を具体的に表現
-      - 家族との大切な時間が失われている状況を感情的に描く
-      - 休日や平日それぞれの課題を丁寧に描写
-      - 解決策としての製品を自然な流れで紹介
-      - 製品の特徴を具体的なメリットと共に詳しく説明
-      - 製品導入後の生活の変化を時間軸に沿って描写
-      - 複数の実際のユーザー体験を会話調で織り交ぜる
-      - 製品がもたらす未来の生活をイメージ豊かに描く
-
-      文章構成の注意点：
-      - 見出しや項目名は使用しない
-      - 各要素を自然な文章の流れで繋ぐ
-      - 段落の切り替えを滑らかにする
-      - お客様の声は会話の一部として組み込む
-      - 価格や特典も文章の流れの中で自然に提示
-      - 数量限定や期間限定も物語の一部として表現
-      - 製品の各機能について具体的なシーンで説明
-      - 導入のメリットを多角的な視点で描写
-      - 家族それぞれの視点からの変化も描く
-
-      重要な指示：
-      - 一行は30文字程度で改行を入れる
-      - 段落間は2行空ける
-      - 情景描写を効果的に使用
-      - 感情に訴えかける表現を取り入れる
-      - 具体的な数字は文章の中に自然に組み込む
-      - 全体を通して物語のように展開する
-      - 読者の共感を引き出す表現を心がける
-      - 製品の各機能を具体的なシーンで説明
-      - 朝・昼・夜それぞれの生活シーンを描写
-      - 休日と平日の変化を対比して表現
-      - 季節ごとの効果や変化も盛り込む
-      - 長期的な効果やメリットも説明
-
-      セールスレターの目安の長さ：
-      - 導入部分：400-500文字
-      - 問題提起と深掘り：600-700文字
-      - 解決策の提示：500-600文字
-      - 製品説明と特徴：700-800文字
-      - 使用例とメリット：600-700文字
-      - お客様の声：500-600文字
-      - 価格と特典の説明：400-500文字
-      - まとめと行動喚起：300-400文字
-      合計：4000-4800文字程度
-
-      ■ お客様の声8：
-      東京都・医療法人青空会（小児科クリニック）
-      院長・木村先生
-
-      【導入の背景】
-      ・院内の衛生管理が最重要課題
-      ・スタッフの清掃負担が大きい
-      ・待合室の清潔さへの要望が多い
-      ・感染症対策の強化が必要
-
-      【具体的な成果】
-      ・待合室の清掃回数が1日3回から6回に増加
-      ・スタッフの清掃時間が75%削減
-      ・患者様からの衛生面の評価が向上
-      ・花粉やハウスダストの軽減を実現
-
-      【活用方法】
-      ・診療時間外の自動清掃
-      ・待合室の定期的な清掃
-      ・キッズスペースの特別清掃モード
-      ・院内の空気質モニタリング
-
-
-      ■ お客様の声9：
-      大阪府・グローバルテック株式会社
-      総務部長・西田健一さん
-
-      【オフィスの課題】
-      ・従業員150名のオープンオフィス
-      ・清掃スタッフの人手不足
-      ・コスト削減の必要性
-      ・24時間稼働のため清掃時間の確保が困難
-
-      【導入後の変化】
-      ・清掃費用が月額15万円削減
-      ・従業員の満足度が89%にアップ
-      ・夜間の自動清掃で作業効率化
-      ・空気環境が改善し、集中力が向上
-
-      【運用のポイント】
-      ・フロアごとの清掃スケジュール設定
-      ・会議室の使用後自動清掃
-      ・エリア別の清掃モード切替
-      ・静音設定での作業時間中の稼働
-    `;
-
-    console.log("Prompt:", prompt);
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: "あなたは説得力のあるセールスレターを書くプロのコピーライターです。詳細で魅力的なストーリーテリングと具体的な例を用いて、セールスレターを作成してください。" },
-        { role: "user", content: prompt }
-      ],
-      max_tokens: 2500,
-      temperature: 0.7,
-    });
-
-    console.log("OpenAI Response:", response);
-
-    const salesLetter = response?.choices?.[0]?.message?.content?.trim();
-
-    if (!salesLetter) {
-      throw new Error("OpenAI API response is empty.");
-    }
+    const { models, ...data } = await req.json();
+    const prompt = `以下の情報を元に、ストーリー性のある魅力的なセールスレターを作成してください。
+文章は自然な流れで展開し、見出しや項目名は使用せず、読者に直接語りかけるような文体で書いてください。
+
+製品情報：
+${data.productName}は、${data.targetPersona}（${data.targetAge}、${data.targetGender}、${data.targetOccupation}）に向けた製品です。
+
+現在の課題：
+${data.fear}
+${data.agitate}
+
+解決策として：
+${data.solution}
+${data.features}
+${data.benefits}
+
+社会的評価：
+${data.mediaExposure}
+${data.testimonials}
+
+価格設定：
+通常価格${data.originalPrice}円のところ、特別価格${data.specialPrice}円
+${data.bonus}（${data.bonusDeadline}まで）
+${data.scarcity}
+${data.urgency}
+
+文章作成の重要なポイント：
+・読者に直接語りかける親近感のある文体を使用
+・一つの段落は3行までを目安に
+・文章の区切りごとに1行空ける
+・話題が変わる際は2行以上空ける
+・重要なポイントは独立した行に
+・数字やデータは前後に空白行を入れて強調
+・長い文章は適切に区切ってリズム感を持たせる
+・句点「。」の後は必ず改行
+・読点「、」の後でも、文が長くなる場合は適宜改行
+
+セールスレターの展開：
+1. 読者の現状や課題に共感する導入から始める
+2. 問題点を具体的に掘り下げる
+3. 解決策を自然な流れで提示
+4. 製品の特徴とメリットを具体的に説明
+5. 実際の使用例や成果を示す
+6. 価格と特典を魅力的に提示
+7. 行動を促す締めくくり
+
+文体に関する注意点：
+・「皆様」「みなさま」などの表現は使わず、「あなた」に直接語りかける
+・「私」という表現は必要最小限に抑え、自然な文の流れを重視
+・主語を省略できる場合は省略し、より自然な日本語の文章に
+・提案や説明は、断定的な表現を避け、やわらかい口調を心がける`;
+
+    const responses = await Promise.all(
+      models.map(async (modelId: string) => {
+        try {
+          switch (modelId) {
+            case 'gpt-4': {
+              const completion = await openai.chat.completions.create({
+                model: 'gpt-4-turbo-preview',
+                messages: [
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+                temperature: 0.7,
+                max_tokens: 2000,
+              });
+              return completion.choices[0].message.content || '';
+            }
+
+            case 'gpt-3.5-turbo': {
+              const completion = await openai.chat.completions.create({
+                model: 'gpt-3.5-turbo',
+                messages: [
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+                temperature: 0.7,
+                max_tokens: 2000,
+              });
+              return completion.choices[0].message.content || '';
+            }
+
+            case 'gemini-pro': {
+              const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+              const result = await model.generateContent(prompt);
+              return result.response.text;
+            }
+            
+            case 'claude-3-opus': {
+              const message = await anthropic.messages.create({
+                model: 'claude-3-opus-20240229',
+                max_tokens: 4000,
+                messages: [
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+              });
+              return message.content[0].text;
+            }
+
+            case 'claude-3-sonnet': {
+              const message = await anthropic.messages.create({
+                model: 'claude-3-sonnet-20240229',
+                max_tokens: 4000,
+                messages: [
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+              });
+              return message.content[0].text;
+            }
+
+            default:
+              throw new Error(`Unsupported model: ${modelId}`);
+          }
+        } catch (error) {
+          console.error(`Error with model ${modelId}:`, error);
+          return `${modelId}でのセールスレター生成中にエラーが発生しました。`;
+        }
+      })
+    );
+
+    const combinedResponse = responses.map((response, index) => {
+      return `【${models[index]}による生成結果】\n\n${response}\n\n`;
+    }).join('\n---\n\n');
 
     // データベース保存を一時的に無効化
     return NextResponse.json({ 
-      salesLetter
+      salesLetter: combinedResponse
     });
 
   } catch (error: unknown) {

@@ -6,8 +6,50 @@ import { Input } from "../components/ui/input";
 import { Card, CardContent } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
 import Link from "next/link";
+import { Checkbox } from "../components/ui/checkbox";
+
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  isSelected: boolean;
+}
 
 export default function Home() {
+  // AIモデル選択
+  const [aiModels, setAiModels] = useState<AIModel[]>([
+    {
+      id: "gpt-4",
+      name: "GPT-4",
+      description: "OpenAIの最高性能モデル。複雑な文章生成と高度な理解力が特徴。",
+      isSelected: true
+    },
+    {
+      id: "gpt-3.5-turbo",
+      name: "GPT-3.5 Turbo",
+      description: "高速な処理と優れたコストパフォーマンスが特徴。",
+      isSelected: false
+    },
+    {
+      id: "gemini-pro",
+      name: "Gemini Pro",
+      description: "Googleの最新AIモデル。高速で正確な文章生成が特徴。",
+      isSelected: false
+    },
+    {
+      id: "claude-3-opus",
+      name: "Claude 3 Opus",
+      description: "Anthropicの最新AIモデル。詳細な分析と長文生成に優れる。",
+      isSelected: false
+    },
+    {
+      id: "claude-3-sonnet",
+      name: "Claude 3 Sonnet",
+      description: "高速な処理と高品質な出力のバランスが特徴。",
+      isSelected: false
+    }
+  ]);
+
   // 基本情報
   const [productName, setProductName] = useState("スマート掃除ロボット");
   
@@ -51,10 +93,26 @@ export default function Home() {
     setter(e.target.value);
   };
 
+  const handleModelSelect = (modelId: string) => {
+    setAiModels(aiModels.map(model => ({
+      ...model,
+      isSelected: model.id === modelId ? !model.isSelected : model.isSelected
+    })));
+  };
+
   const generateSalesLetter = async () => {
     setLoading(true);
     try {
+      const selectedModels = aiModels.filter(model => model.isSelected).map(model => model.id);
+      
+      if (selectedModels.length === 0) {
+        setSalesLetter("AIモデルを少なくとも1つ選択してください。");
+        setLoading(false);
+        return;
+      }
+
       const body = JSON.stringify({
+        models: selectedModels,
         productName,
         targetPersona,
         targetAge,
@@ -368,6 +426,34 @@ export default function Home() {
                   </div>
                 )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="p-6 mb-6">
+          <CardContent>
+            <h2 className="text-xl font-semibold mb-4">AIモデル選択</h2>
+            <div className="space-y-4">
+              {aiModels.map((model) => (
+                <div key={model.id} className="flex items-start space-x-3">
+                  <Checkbox
+                    id={model.id}
+                    checked={model.isSelected}
+                    onCheckedChange={() => handleModelSelect(model.id)}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor={model.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {model.name}
+                    </label>
+                    <p className="text-sm text-gray-500">
+                      {model.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
