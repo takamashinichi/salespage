@@ -2,6 +2,8 @@ import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from '@anthropic-ai/sdk';
+import { TextBlock } from '@anthropic-ai/sdk/resources/index.mjs';
+
 // Prismaの一時的な無効化
 // import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
@@ -121,7 +123,7 @@ ${data.urgency}
                   },
                 ],
               });
-              return message.content[0].text;
+              return (message.content[0] as TextBlock).text;
             }
 
             case 'claude-3-sonnet': {
@@ -135,7 +137,7 @@ ${data.urgency}
                   },
                 ],
               });
-              return message.content[0].text;
+              return (message.content[0] as TextBlock).text;
             }
 
             default:
