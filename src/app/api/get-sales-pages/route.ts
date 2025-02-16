@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const prisma = new PrismaClient()
 
-// eslint-disable-line @typescript-eslint/no-unused-vars
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     const salesPages = await prisma.salesPage.findMany({
       orderBy: {
