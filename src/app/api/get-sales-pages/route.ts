@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const prisma = new PrismaClient()
 
+// eslint-disable-line @typescript-eslint/no-unused-vars
 export async function GET(request: NextRequest) {
   try {
     const salesPages = await prisma.salesPage.findMany({
@@ -19,4 +20,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}
