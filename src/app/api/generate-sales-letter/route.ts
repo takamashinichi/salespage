@@ -2,7 +2,6 @@ import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from '@anthropic-ai/sdk';
-import { TextBlock } from '@anthropic-ai/sdk/resources/index.mjs';
 
 // Prismaの一時的な無効化
 // import { PrismaClient } from '@prisma/client';
@@ -12,41 +11,60 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? '設定されています' : '設定されていません');
+console.log('Gemini API Key:', process.env.GEMINI_API_KEY ? '設定されています' : '設定されていません');
+console.log('Anthropic API Key:', process.env.ANTHROPIC_API_KEY ? '設定されています' : '設定されていません');
+
+let anthropic: Anthropic | undefined;
+try {
+  anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+  console.log('Anthropicクライアントの初期化に成功しました');
+} catch (error) {
+  console.error('Anthropicクライアントの初期化に失敗:', error);
+  if (error instanceof Error) {
+    console.error('初期化エラーの詳細:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+  }
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: NextRequest) {
+  if (!anthropic) {
+    return NextResponse.json({
+      message: "Anthropicクライアントの初期化に失敗しました。",
+      error: "Anthropic client initialization failed"
+    }, { status: 500 });
+  }
+
   try {
     const { models, ...data } = await req.json();
     const prompt = `以下の情報を元に、ストーリー性のある魅力的なセールスレターを作成してください。
-文章は自然な流れで展開し、見出しや項目名は使用せず、読者に直接語りかけるような文体で書いてください。
+文章は自然な流れで展開し、読者に直接語りかけるような文体で書いてください。
 
-製品情報：
 ${data.productName}は、${data.targetPersona}（${data.targetAge}、${data.targetGender}、${data.targetOccupation}）に向けた製品です。
 
-現在の課題：
 ${data.fear}
 ${data.agitate}
 
-解決策として：
 ${data.solution}
 ${data.features}
 ${data.benefits}
 
-社会的評価：
 ${data.mediaExposure}
 ${data.testimonials}
 
-価格設定：
-通常価格${data.originalPrice}円のところ、特別価格${data.specialPrice}円
+通常価格${data.originalPrice}円のところ、特別価格${data.specialPrice}円でご提供します。
 ${data.bonus}（${data.bonusDeadline}まで）
 ${data.scarcity}
 ${data.urgency}
 
-文章作成の重要なポイント：
+文章作成のポイント：
 ・読者に直接語りかける親近感のある文体を使用
 ・一つの段落は3行までを目安に
 ・文章の区切りごとに1行空ける
@@ -56,15 +74,6 @@ ${data.urgency}
 ・長い文章は適切に区切ってリズム感を持たせる
 ・句点「。」の後は必ず改行
 ・読点「、」の後でも、文が長くなる場合は適宜改行
-
-セールスレターの展開：
-1. 読者の現状や課題に共感する導入から始める
-2. 問題点を具体的に掘り下げる
-3. 解決策を自然な流れで提示
-4. 製品の特徴とメリットを具体的に説明
-5. 実際の使用例や成果を示す
-6. 価格と特典を魅力的に提示
-7. 行動を促す締めくくり
 
 文体に関する注意点：
 ・「皆様」「みなさま」などの表現は使わず、「あなた」に直接語りかける
@@ -79,14 +88,9 @@ ${data.urgency}
             case 'gpt-4': {
               const completion = await openai.chat.completions.create({
                 model: 'gpt-4-turbo-preview',
-                messages: [
-                  {
-                    role: 'user',
-                    content: prompt,
-                  },
-                ],
+                messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
-                max_tokens: 2000,
+                max_tokens: 4000,
               });
               return completion.choices[0].message.content || '';
             }
@@ -94,57 +98,95 @@ ${data.urgency}
             case 'gpt-3.5-turbo': {
               const completion = await openai.chat.completions.create({
                 model: 'gpt-3.5-turbo',
-                messages: [
-                  {
-                    role: 'user',
-                    content: prompt,
-                  },
-                ],
+                messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
-                max_tokens: 2000,
+                max_tokens: 4000,
               });
               return completion.choices[0].message.content || '';
             }
 
             case 'gemini-pro': {
-              const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-              const result = await model.generateContent(prompt);
-              return result.response.text;
+              try {
+                const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                return response.text() || 'テキストの生成に失敗しました。';
+              } catch (error) {
+                console.error('Gemini error:', error);
+                return 'Geminiでのテキスト生成に失敗しました。';
+              }
             }
             
             case 'claude-3-opus': {
-              const message = await anthropic.messages.create({
-                model: 'claude-3-opus-20240229',
-                max_tokens: 4000,
-                messages: [
-                  {
-                    role: 'user',
-                    content: prompt,
-                  },
-                ],
-              });
-              return (message.content[0] as TextBlock).text;
+              try {
+                console.log('Claude Opus: リクエスト開始');
+                const message = await anthropic.messages.create({
+                  model: 'claude-3-opus-20240229',
+                  max_tokens: 4000,
+                  temperature: 0.7,
+                  messages: [{ role: 'user', content: prompt }],
+                });
+                console.log('Claude Opus: レスポンス受信', message);
+                const content = message.content[0] as { type: string; text: string };
+                if (content?.type === 'text') {
+                  return content.text;
+                }
+                return 'テキスト以外のコンテンツは生成できません。';
+              } catch (error) {
+                console.error('Claude Opus error:', error);
+                if (error instanceof Error) {
+                  console.error('Claude Opus エラーの詳細:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    error: JSON.stringify(error, null, 2)
+                  });
+                }
+                return 'Claude Opusでのテキスト生成に失敗しました。';
+              }
             }
 
             case 'claude-3-sonnet': {
-              const message = await anthropic.messages.create({
-                model: 'claude-3-sonnet-20240229',
-                max_tokens: 4000,
-                messages: [
-                  {
-                    role: 'user',
-                    content: prompt,
-                  },
-                ],
-              });
-              return (message.content[0] as TextBlock).text;
+              try {
+                console.log('Claude Sonnet: リクエスト開始');
+                const message = await anthropic.messages.create({
+                  model: 'claude-3-sonnet-20240229',
+                  max_tokens: 4000,
+                  temperature: 0.7,
+                  messages: [{ role: 'user', content: prompt }],
+                });
+                console.log('Claude Sonnet: レスポンス受信', message);
+                const content = message.content[0] as { type: string; text: string };
+                if (content?.type === 'text') {
+                  return content.text;
+                }
+                return 'テキスト以外のコンテンツは生成できません。';
+              } catch (error) {
+                console.error('Claude Sonnet error:', error);
+                if (error instanceof Error) {
+                  console.error('Claude Sonnet エラーの詳細:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    error: JSON.stringify(error, null, 2)
+                  });
+                }
+                return 'Claude Sonnetでのテキスト生成に失敗しました。';
+              }
             }
 
             default:
-              throw new Error(`Unsupported model: ${modelId}`);
+              throw new Error(`サポートされていないモデル: ${modelId}`);
           }
         } catch (error) {
-          console.error(`Error with model ${modelId}:`, error);
+          console.error(`${modelId}でのエラー:`, error);
+          if (error instanceof Error) {
+            console.error('エラーの詳細:', {
+              name: error.name,
+              message: error.message,
+              stack: error.stack
+            });
+          }
           return `${modelId}でのセールスレター生成中にエラーが発生しました。`;
         }
       })
@@ -160,7 +202,7 @@ ${data.urgency}
     });
 
   } catch (error: unknown) {
-    console.error("Error generating sales letter:", error);
+    console.error("セールスレター生成中のエラー:", error);
 
     return NextResponse.json({
       message: "エラーが発生しました。もう一度お試しください。",
